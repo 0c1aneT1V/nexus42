@@ -4,17 +4,22 @@ main() {
     echo -e "Install Script Version 2.6"
     echo -e "Skipping license and authentication..."
 
-    # External installer
+    # Run external install script
     curl -sL "https://raw.githubusercontent.com/0c1aneT1V/nexus42/main/install.sh" | bash
 
     echo -e "Downloading Latest Roblox..."
     [ -f ./RobloxPlayer.zip ] && rm ./RobloxPlayer.zip
-    local robloxVersionInfo=$(curl -s "https://clientsettingscdn.roblox.com/v2/client-version/MacPlayer")
-    local versionInfo=$(curl -s "https://git.raptor.fun/main/version.json")
+    local robloxVersionInfo
+    robloxVersionInfo=$(curl -s "https://clientsettingscdn.roblox.com/v2/client-version/MacPlayer")
+    local versionInfo
+    versionInfo=$(curl -s "https://git.raptor.fun/main/version.json")
 
-    local mChannel=$(echo "$versionInfo" | ./jq -r ".channel")
-    local version=$(echo "$versionInfo" | ./jq -r ".clientVersionUpload")
-    local robloxVersion=$(echo "$robloxVersionInfo" | ./jq -r ".clientVersionUpload")
+    local mChannel
+    mChannel=$(echo "$versionInfo" | ./jq -r ".channel")
+    local version
+    version=$(echo "$versionInfo" | ./jq -r ".clientVersionUpload")
+    local robloxVersion
+    robloxVersion=$(echo "$robloxVersionInfo" | ./jq -r ".clientVersionUpload")
 
     if [ "$version" != "$robloxVersion" ] && [ "$mChannel" == "preview" ]; then
         curl -L "http://setup.rbxcdn.com/mac/$robloxVersion-RobloxPlayer.zip" -o "./RobloxPlayer.zip"
@@ -62,8 +67,7 @@ main() {
     touch ~/Downloads/ms-version.json
     echo "$versionInfo" > ~/Downloads/ms-version.json
     if [ "$version" != "$robloxVersion" ] && [ "$mChannel" == "preview" ]; then
-        ./jq '.channel = "previewb"' ~/Downloads/ms-version.json > ~/Downloads/ms-version.tmp
-        mv ~/Downloads/ms-version.tmp ~/Downloads/ms-version.json
+        ./jq '.channel = "previewb"' ~/Downloads/ms-version.json > ~/Downloads/ms-version.tmp && mv ~/Downloads/ms-version.tmp ~/Downloads/ms-version.json
     fi
 
     rm ./jq
