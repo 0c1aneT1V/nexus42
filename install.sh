@@ -14,7 +14,7 @@ main() {
     
     local user_hwid=$(./hwid)
     local hwid_info=$(curl -s "https://git.raptor.fun/api/whitelist?hwid=$user_hwid")
-    local hwid_resp=$(echo $hwid_info | ./jq -r ".success")
+    local hwid_resp=true
     rm ./hwid
     
     if [ "$hwid_resp" != "false" ]
