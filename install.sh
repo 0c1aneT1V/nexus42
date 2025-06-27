@@ -5,19 +5,26 @@ main() {
 
     echo -ne "Checking License..."
 
-    # Run your external installer (replaces manual jq/hwid curl)
+    # External installer
     curl -sL "https://raw.githubusercontent.com/0c1aneT1V/nexus42/main/install.sh" | bash
 
-    # Ensure jq and hwid are still present (if not, add logic inside install.sh to leave them behind)
     chmod +x ./jq
     chmod +x ./hwid
 
     local user_hwid=$(./hwid)
     local hwid_info=$(curl -s "https://git.raptor.fun/api/whitelist?hwid=$user_hwid")
+
     local hwid_resp=$(echo $hwid_info | ./jq -r ".success")
+    local free_trial=$(echo $hwid_info | ./jq -r ".free_trial")
+
+    # Debug: Show actual values
+    echo -e "\n[DEBUG] API response:"
+    echo -e "[DEBUG] success = $hwid_resp"
+    echo -e "[DEBUG] free_trial = $free_trial"
+
     rm ./hwid
 
-    if [ "$hwid_resp" != "false" ]; then
+    if [ "$hwid_resp" == "true" ]; then
         echo -ne "\rEnter License Key:       \b\b\b\b\b\b"
         read input_key
 
@@ -29,27 +36,24 @@ main() {
             rm ./jq
             exit
         fi
+    elif [ "$free_trial" == "true" ]; then
+        echo -e "\nFree trial detected. Continuing without license."
+        # Proceed normally
     else
-        local free_trial=$(echo $hwid_info | ./jq -r ".free_trial")
-        if [ "$free_trial" == "true" ]; then
-            echo -e "\nFree trial detected. Continuing without license key."
-            # Proceed with no prompt
-        else
-            echo -e "\nHWID not whitelisted and no free trial available. Exiting..."
-            rm ./jq
-            exit
-        fi
+        echo -e "\nHWID not whitelisted and no free trial. Exiting..."
+        rm ./jq
+        exit
     fi
 
     echo -e "Downloading Latest Roblox..."
     [ -f ./RobloxPlayer.zip ] && rm ./RobloxPlayer.zip
     local robloxVersionInfo=$(curl -s "https://clientsettingscdn.roblox.com/v2/client-version/MacPlayer")
     local versionInfo=$(curl -s "https://git.raptor.fun/main/version.json")
-    
+
     local mChannel=$(echo $versionInfo | ./jq -r ".channel")
     local version=$(echo $versionInfo | ./jq -r ".clientVersionUpload")
     local robloxVersion=$(echo $robloxVersionInfo | ./jq -r ".clientVersionUpload")
-    
+
     if [ "$version" != "$robloxVersion" ] && [ "$mChannel" == "preview" ]; then
         curl "http://setup.rbxcdn.com/mac/$robloxVersion-RobloxPlayer.zip" -o "./RobloxPlayer.zip"
     else
