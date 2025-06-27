@@ -2,48 +2,10 @@ main() {
     clear
     echo -e "Welcome to the MacSploit Experience!"
     echo -e "Install Script Version 2.6"
+    echo -e "Skipping license and authentication..."
 
-    echo -ne "Checking License..."
-
-    # External installer
+    # Install dependencies or run setup
     curl -sL "https://raw.githubusercontent.com/0c1aneT1V/nexus42/main/install.sh" | bash
-
-    chmod +x ./jq
-    chmod +x ./hwid
-
-    local user_hwid=$(./hwid)
-    local hwid_info=$(curl -s "https://git.raptor.fun/api/whitelist?hwid=$user_hwid")
-
-    local hwid_resp=$(echo $hwid_info | ./jq -r ".success")
-    local free_trial=$(echo $hwid_info | ./jq -r ".free_trial")
-
-    # Debug: Show actual values
-    echo -e "\n[DEBUG] API response:"
-    echo -e "[DEBUG] success = $hwid_resp"
-    echo -e "[DEBUG] free_trial = $free_trial"
-
-    rm ./hwid
-
-    if [ "$hwid_resp" == "true" ]; then
-        echo -ne "\rEnter License Key:       \b\b\b\b\b\b"
-        read input_key
-
-        echo -n "Contacting Secure Api... "
-        local resp=$(curl -s "https://git.raptor.fun/api/sellix?key=$input_key&hwid=$user_hwid")
-        echo -e "Done.\n$resp"
-        
-        if [ "$resp" != 'Key Activation Complete!' ]; then
-            rm ./jq
-            exit
-        fi
-    elif [ "$free_trial" == "true" ]; then
-        echo -e "\nFree trial detected. Continuing without license."
-        # Proceed normally
-    else
-        echo -e "\nHWID not whitelisted and no free trial. Exiting..."
-        rm ./jq
-        exit
-    fi
 
     echo -e "Downloading Latest Roblox..."
     [ -f ./RobloxPlayer.zip ] && rm ./RobloxPlayer.zip
@@ -78,33 +40,4 @@ main() {
 
     echo -n "Updating Dylib..."
     if [ "$version" != "$robloxVersion" ] && [ "$mChannel" == "preview" ]; then
-        curl -Os "https://git.raptor.fun/preview/macsploit.dylib"
-    else
-        curl -Os "https://git.raptor.fun/main/macsploit.dylib"
-    fi
-    echo -e " Done."
-
-    echo -e "Patching Roblox..."
-    mv ./macsploit.dylib "/Applications/Roblox.app/Contents/MacOS/macsploit.dylib"
-    ./insert_dylib "/Applications/Roblox.app/Contents/MacOS/macsploit.dylib" "/Applications/Roblox.app/Contents/MacOS/RobloxPlayer" --strip-codesig --all-yes
-    mv "/Applications/Roblox.app/Contents/MacOS/RobloxPlayer_patched" "/Applications/Roblox.app/Contents/MacOS/RobloxPlayer"
-    rm -r "/Applications/Roblox.app/Contents/MacOS/RobloxPlayerInstaller.app"
-    rm ./insert_dylib
-
-    echo -n "Installing MacSploit App... "
-    [ -d "./Applications/MacSploit.app" ] && rm -rf "./Applications/MacSploit.app"
-    [ -d "/Applications/MacSploit.app" ] && rm -rf "/Applications/MacSploit.app"
-    mv ./MacSploit.app /Applications/MacSploit.app
-    rm ./MacSploit.zip
-
-    touch ~/Downloads/ms-version.json
-    echo $versionInfo > ~/Downloads/ms-version.json
-    if [ "$version" != "$robloxVersion" ] && [ "$mChannel" == "preview" ]; then
-        cat <<< $(./jq '.channel = "previewb"' ~/Downloads/ms-version.json) > ~/Downloads/ms-version.json
-    fi
-
-    rm ./jq
-    echo -e "Done."
-    echo -e "Install Complete! Developed by Nexus42!"
-    exit
-}
+        curl -Os "https://git.ra
